@@ -389,7 +389,8 @@ static int compose_payload_gelf(struct flb_out_http *ctx,
 
 static int compose_payload(struct flb_out_http *ctx,
                            const void *in_body, size_t in_size,
-                           void **out_body, size_t *out_size)
+                           void **out_body, size_t *out_size,
+                           flb_sds_t out_overflow)
 {
     flb_sds_t encoded;
 
@@ -404,7 +405,9 @@ static int compose_payload(struct flb_out_http *ctx,
                                                   in_size,
                                                   ctx->out_format,
                                                   ctx->json_date_format,
-                                                  ctx->date_key);
+                                                  ctx->date_key,
+                                                  ctx->maxsegmentsize,
+                                                  out_overflow);
         if (encoded == NULL) {
             flb_plg_error(ctx->ins, "failed to convert json");
             return FLB_ERROR;
@@ -579,6 +582,13 @@ static void cb_http_flush(struct flb_event_chunk *event_chunk,
     struct flb_out_http *ctx = out_context;
     void *out_body;
     size_t out_size;
+
+    flb_sds_t out_overflow;
+    struct flb_event_chunk chunk;
+
+    chunk->data = event_chunk->data;
+    chunk->size = event_chunk->size;
+
     (void) i_ins;
 
     if (ctx->body_key) {
@@ -590,26 +600,32 @@ static void cb_http_flush(struct flb_event_chunk *event_chunk,
         }
     }
     else {
-        ret = compose_payload(ctx, event_chunk->data, event_chunk->size,
-                              &out_body, &out_size);
-        if (ret != FLB_OK) {
-            FLB_OUTPUT_RETURN(ret);
-        }
+        do {
+            ret = compose_payload(ctx, chunk->data, chunk->size,
+                                  &out_body, &out_size,
+                                  out_overflow);
+            if (ret != FLB_OK) {
+                FLB_OUTPUT_RETURN(ret);
+            }
 
-        if ((ctx->out_format == FLB_PACK_JSON_FORMAT_JSON) ||
-            (ctx->out_format == FLB_PACK_JSON_FORMAT_STREAM) ||
-            (ctx->out_format == FLB_PACK_JSON_FORMAT_LINES) ||
-            (ctx->out_format == FLB_HTTP_OUT_GELF)) {
-            ret = http_post(ctx, out_body, out_size,
-                            event_chunk->tag, flb_sds_len(event_chunk->tag), NULL);
-            flb_sds_destroy(out_body);
-        }
-        else {
-            /* msgpack */
-            ret = http_post(ctx,
-                            event_chunk->data, event_chunk->size,
-                            event_chunk->tag, flb_sds_len(event_chunk->tag), NULL);
-        }
+            chunk->data = out_overflow;
+            chunk->size = flb_sds_len(out_overflow);
+
+            if ((ctx->out_format == FLB_PACK_JSON_FORMAT_JSON) ||
+                (ctx->out_format == FLB_PACK_JSON_FORMAT_STREAM) ||
+                (ctx->out_format == FLB_PACK_JSON_FORMAT_LINES) ||
+                (ctx->out_format == FLB_HTTP_OUT_GELF)) {
+                ret = http_post(ctx, out_body, out_size,
+                                event_chunk->tag, flb_sds_len(event_chunk->tag), NULL);
+                flb_sds_destroy(out_body);
+            }
+            else {
+                /* msgpack */
+                ret = http_post(ctx,
+                                event_chunk->data, event_chunk->size,
+                                event_chunk->tag, flb_sds_len(event_chunk->tag), NULL);
+            }
+        while (flb_sds_len(out_overflow));
     }
 
     FLB_OUTPUT_RETURN(ret);
@@ -701,6 +717,14 @@ static struct flb_config_map config_map[] = {
      "Specify an optional HTTP URI for the target web server, e.g: /something"
     },
 
+    {
+     FLB_CONFIG_MAP_SIZE, "max_segment_size", "0",
+     0, FLB_TRUE, offsetof(struct flb_out_http, maxsegmentsize),
+     "Set the maximum size allowed per segment. The value must be only integers "
+     "representing the number of bytes allowed. If no value is provided, the "
+     "the maximum size is not limited."
+    },
+
     /* Gelf Properties */
     {
      FLB_CONFIG_MAP_STR, "gelf_timestamp_key", NULL,
@@ -754,7 +778,10 @@ static int cb_http_format_test(struct flb_config *config,
     struct flb_out_http *ctx = plugin_context;
     int ret;
 
-    ret = compose_payload(ctx, data, bytes, out_data, out_size);
+    flb_sds_t out_overflow;
+
+
+    ret = compose_payload(ctx, data, bytes, out_data, out_size, out_overflow);
     if (ret != FLB_OK) {
         flb_error("ret=%d", ret);
         return -1;

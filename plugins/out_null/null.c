@@ -123,7 +123,9 @@ static void cb_null_flush(struct flb_event_chunk *event_chunk,
                                                event_chunk->size,
                                                ctx->out_format,
                                                ctx->json_date_format,
-                                               ctx->date_key);
+                                               ctx->date_key,
+					       0,
+					       NULL);
         flb_sds_destroy(json);
     }
 

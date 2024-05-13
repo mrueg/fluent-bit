@@ -915,7 +915,7 @@ static int msgpack_pack_formatted_datetime(flb_sds_t out_buf, char time_formatte
 
 flb_sds_t flb_pack_msgpack_to_json_format(const char *data, uint64_t bytes,
                                           int json_format, int date_format,
-                                          flb_sds_t date_key)
+                                          flb_sds_t date_key, uint64_t maxsegmentsize, flb_sds_t overflow)
 {
     int i;
     int ok = MSGPACK_UNPACK_SUCCESS;
@@ -1044,7 +1044,7 @@ flb_sds_t flb_pack_msgpack_to_json_format(const char *data, uint64_t bytes,
 
         /*
          * If the format is the original msgpack style, just continue since
-         * we don't care about separator or JSON convertion at this point.
+         * we don't care about separator or JSON conversion at this point.
          */
         if (json_format == FLB_PACK_JSON_FORMAT_JSON) {
             continue;

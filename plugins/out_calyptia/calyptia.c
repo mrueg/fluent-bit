@@ -874,7 +874,9 @@ static void cb_calyptia_flush(struct flb_event_chunk *event_chunk,
                                                event_chunk->size,
                                                FLB_PACK_JSON_FORMAT_STREAM,
                                                FLB_PACK_JSON_DATE_DOUBLE,
-                                               NULL);
+                                               NULL,
+					       0,
+					       NULL);
         if (json == NULL) {
             flb_upstream_conn_release(u_conn);
             FLB_OUTPUT_RETURN(FLB_RETRY);

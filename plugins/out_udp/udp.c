@@ -158,7 +158,9 @@ static int deliver_chunks_json(struct flb_out_udp *ctx,
                                                off - previous_offset,
                                                ctx->out_format,
                                                ctx->json_date_format,
-                                               ctx->date_key);
+                                               ctx->date_key,
+                                               0,
+                                               NULL);
         if (!json) {
             flb_plg_error(ctx->ins, "error formatting JSON payload");
 

@@ -54,6 +54,8 @@ struct flb_out_http *flb_http_conf_create(struct flb_output_instance *ins,
     }
     ctx->ins = ins;
 
+    ctx->maxsegmentsize = 0;
+
     ret = flb_output_config_map_set(ins, (void *) ctx);
     if (ret == -1) {
         flb_free(ctx);

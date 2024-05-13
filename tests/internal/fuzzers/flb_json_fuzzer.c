@@ -60,7 +60,7 @@ int LLVMFuzzerTestOneInput(unsigned char *data, size_t size)
         if (decider < 0x30) {
             flb_sds_t ret_s = flb_pack_msgpack_to_json_format(out_buf, out_size,
                     FLB_PACK_JSON_FORMAT_LINES,
-                    (int)decider, d);
+                    (int)decider, d, 0, NULL);
             free(out_buf);
             if (ret_s != NULL) {
                 flb_sds_destroy(ret_s);
@@ -69,7 +69,7 @@ int LLVMFuzzerTestOneInput(unsigned char *data, size_t size)
         else {
             flb_sds_t ret_s = flb_pack_msgpack_to_json_format(out_buf, out_size,
                     FLB_PACK_JSON_FORMAT_LINES,
-                    FLB_PACK_JSON_DATE_EPOCH, NULL);
+                    FLB_PACK_JSON_DATE_EPOCH, NULL, 0, NULL);
             free(out_buf);
             if (ret_s != NULL) {
                 flb_sds_destroy(ret_s);

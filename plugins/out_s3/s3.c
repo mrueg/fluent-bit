@@ -2107,7 +2107,9 @@ static void cb_s3_flush(struct flb_event_chunk *event_chunk,
                                                 event_chunk->size,
                                                 FLB_PACK_JSON_FORMAT_LINES,
                                                 ctx->json_date_format,
-                                                ctx->date_key);
+                                                ctx->date_key,
+						0,
+						NULL);
     }
     if (chunk == NULL) {
         flb_plg_error(ctx->ins, "Could not marshal msgpack to output string");

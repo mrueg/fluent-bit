@@ -283,7 +283,9 @@ void test_json_dup_keys()
     out_json = flb_pack_msgpack_to_json_format(out_buf, out_size,
                                                FLB_PACK_JSON_FORMAT_LINES,
                                                FLB_PACK_JSON_DATE_EPOCH,
-                                               d);
+                                               d,
+					       0,
+					       NULL);
     TEST_CHECK(out_json != NULL);
 
     TEST_CHECK(strncmp(out_json, data_out, flb_sds_len(out_json)) == 0);
@@ -850,7 +852,7 @@ void test_json_date(char* expect, int date_format)
 
     ret = flb_pack_msgpack_to_json_format((const char*)&input_msgpack[0], sizeof(input_msgpack),
                                           FLB_PACK_JSON_FORMAT_JSON, date_format,
-                                          json_key);
+                                          json_key, 0, NULL);
     if (!TEST_CHECK(ret != NULL)) {
         TEST_MSG("flb_pack_msgpack_to_json_format failed");
         flb_sds_destroy(json_key);

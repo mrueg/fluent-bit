@@ -91,7 +91,8 @@ int flb_pack_json_valid(const char *json, size_t len);
 
 flb_sds_t flb_pack_msgpack_to_json_format(const char *data, uint64_t bytes,
                                           int json_format, int date_format,
-                                          flb_sds_t date_key);
+                                          flb_sds_t date_key, uint64_t maxsegmentsize,
+					  flb_sds_t overflow);
 int flb_pack_to_json_format_type(const char *str);
 int flb_pack_to_json_date_type(const char *str);
 

@@ -52,7 +52,9 @@ static int azure_blob_format(struct flb_config *config,
     out_buf = flb_pack_msgpack_to_json_format(data, bytes,
                                               FLB_PACK_JSON_FORMAT_LINES,
                                               FLB_PACK_JSON_DATE_ISO8601,
-                                              ctx->date_key);
+                                              ctx->date_key,
+					      0,
+					      NULL);
     if (!out_buf) {
         return -1;
     }
